@@ -5,7 +5,10 @@ import java.nio.channels.*;
 import java.util.*;
 
 /**
-* 
+*
 *
 *
 **/
+class Client(){
+	
+}
