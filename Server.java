@@ -19,13 +19,47 @@ public class Server{
 
             while (true){
                 SocketChannel sc = channel.accept();
-                TcpServerThread t = new TcpServerThread(sc);
+                Thread t = new Thread(new Runnable() {
+                    public void run() {
+                        runThread(sc);
+                    }
+                });
+
+                //TcpServerThread t = new TcpServerThread(sc);
                 t.start();
             }
         }
         catch(IOException e){
             System.out.println("Exception in the server class.");
             System.out.println(e);
+        }
+    }
+
+    public void runThread(SocketChannel s){
+        SocketChannel sc = s;
+        try{
+            //Get the clients username
+            ByteBuffer userBuf = ByteBuffer.allocate(1024);
+            sc.read(userBuf);
+            String userName = new String(userBuf.array());
+
+            boolean connected = true;
+            while (connected){
+                ByteBuffer buff = ByteBuffer.allocate(1024);
+                sc.read(buff);
+                String message = new String(buff.array());
+                message = message.trim();
+                System.out.println(message);
+                buff.flip();
+                sc.write(buff);
+            }
+
+            sc.close();
+        }
+        catch(IOException e){
+            System.out.println("Exception in the thread class.");
+            System.out.println(e);
+
         }
     }
 
