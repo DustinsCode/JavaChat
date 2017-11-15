@@ -13,23 +13,82 @@ import java.util.*;
 class Client{
 	int portNum;
 	String ipAddr;
+	ArrayList<String> commands = new ArrayList<>();
+	boolean admin;
 	public Client(String ip, int port){
 		portNum = port;
 		ipAddr = ip;
+		admin = false;
+		commands.add("/exit");
+		commands.add("/pm");
+		commands.add("/kick");
 		runClient();
 	}
 
 	public void runClient(){
-
-		String userName = System.console().readLine("Enter your username: ");
+		Console cons = System.console();
+		String userName = cons.readLine("Enter your username: ");
 
 		try{
 			SocketChannel sc = SocketChannel.open();
 			sc.connect(new InetSocketAddress(ipAddr, portNum));
+			ClientThread ct = new ClientThread(sc);
+			ct.start();
+
 			System.out.println("Connected to Server!");
+
+			//Sends the username to the server and establishes a connection
+			userName = "/u " + userName;
+			ByteBuffer buff = ByteBuffer.wrap(userName.getBytes());
+			sc.write(buff);
+			while(true){
+				String message = "";
+
+				while(message.equals("")){
+					message = cons.readLine(">");
+					message = message.trim();
+					if(validMessage(message))
+						break;
+					else{
+						System.out.println("Invalid command");
+						message = "";
+					}
+				}
+
+				buff = ByteBuffer.wrap(message.getBytes());
+				sc.write(buff);
+			}
+
 		}catch(IOException e){
 			System.out.println("Got an exception.  Whoops.");
 		}
+	}
+
+	/**
+	* Checks to see if messsage or command is valid
+	*
+	* @param m the message to be checked
+	* @return true of false if valid
+	*/
+	private boolean validMessage(String m){
+		if(m.charAt(0) != '/'){
+			return true;
+		}else{
+			String[] contents = m.split(" ");
+			switch(contents[0]){
+				case "/exit":
+					return true;
+				case "/pm":
+					if(contents.length == 2)
+						return true;
+					break;
+				case "/kick":
+					if(contents.length == 2 && admin == true)
+						return true;
+					break;
+			}
+		}
+		return false;
 	}
 
 	public static void main(String[] args){
