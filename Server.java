@@ -4,7 +4,8 @@ import java.nio.*;
 import java.nio.channels.*;
 
 public class Server{
-    int portNum;
+    private int portNum;
+
     public Server(int port){
         portNum = port;
         runServer();
@@ -58,16 +59,30 @@ public class Server{
 
 class TcpServerThread extends Thread{
     SocketChannel sc;
+
     TcpServerThread(SocketChannel s){
         sc = s;
+        System.out.println("Thread created");
     }
 
     public void run(){
         try{
-            ByteBuffer buff = ByteBuffer.allocate(1024);
-            sc.read(buff);
-            String message = new String(buff.array());
-            System.out.println(message);
+            //Get the clients username
+            ByteBuffer userBuf = ByteBuffer.allocate(1024);
+            sc.read(userBuf);
+            String userName = new String(userBuf.array());
+
+            boolean connected = true;
+            while (connected){
+                ByteBuffer buff = ByteBuffer.allocate(1024);
+                sc.read(buff);
+                String message = new String(buff.array());
+                message = message.trim();
+                System.out.println(message);
+                buff.flip();
+                sc.write(buff);
+            }
+
             sc.close();
         }
         catch(IOException e){
