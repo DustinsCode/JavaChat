@@ -1,0 +1,15 @@
+List of commands to implement:
+
+client commands (for use by everyone):
+/u <username> 	//First message sent by client.
+				//Tells server our userName
+
+/exit	//exits Server
+
+/pm <username> <message> //privately messages specified user
+
+server commands:
+/admin //send this to a user to make them admin
+
+admin commands:
+/kick <username> //kicks this user from Server
