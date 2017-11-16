@@ -22,6 +22,8 @@ class Client{
 		commands.add("/exit");
 		commands.add("/pm");
 		commands.add("/kick");
+
+
 		runClient();
 	}
 
@@ -32,8 +34,14 @@ class Client{
 		try{
 			SocketChannel sc = SocketChannel.open();
 			sc.connect(new InetSocketAddress(ipAddr, portNum));
-			ClientThread ct = new ClientThread(sc);
-			ct.start();
+
+			Thread t = new Thread(new Runnable() {
+				public void run() {
+					//Code to run in thread
+					runThread(sc);
+				}
+			});
+			t.start();
 
 			System.out.println("Connected to Server!");
 
@@ -45,10 +53,14 @@ class Client{
 				String message = "";
 
 				while(message.equals("")){
+					Thread.sleep(100);
 					message = cons.readLine(">");
 					message = message.trim();
-					if(validMessage(message))
+					if(validMessage(message)){
+						backspace(message);
 						break;
+					}
+
 					else{
 						System.out.println("Invalid command");
 						message = "";
@@ -59,7 +71,7 @@ class Client{
 				sc.write(buff);
 			}
 
-		}catch(IOException e){
+		}catch(Exception e){
 			System.out.println("Got an exception.  Whoops.");
 		}
 	}
@@ -89,6 +101,11 @@ class Client{
 			}
 		}
 		return false;
+	}
+
+	private void backspace(String s){
+		System.out.print(String.format("\033[%dA",1));
+		System.out.print("\033[2K");
 	}
 
 	public static void main(String[] args){
@@ -146,6 +163,23 @@ class Client{
 			return false;
 		}
 	}
+
+	private void runThread(SocketChannel sc){
+		while (true){
+			try{
+				ByteBuffer buff = ByteBuffer.allocate(1024);
+
+				sc.read(buff);
+				//System.out.println("read");
+				String message = new String(buff.array());
+				message = message.trim();
+				System.out.println(message);
+			}catch(Exception e){
+				System.out.println("Got an exception in thread");
+			}
+		}
+	}
+
 }
 
 class ClientThread extends Thread{
@@ -159,6 +193,8 @@ class ClientThread extends Thread{
 			ByteBuffer buff = ByteBuffer.allocate(1024);
 			sc.read(buff);
 			String message = new String(buff.array());
+			message = message.trim();
+			System.out.println(message);
 		}catch(IOException e){
 			System.out.println("Got an exception in thread");
 		}
