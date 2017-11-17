@@ -24,7 +24,7 @@ public class Server{
             System.out.println("Server conected...");
 
             while (true){
-                
+
                 SocketChannel sc = channel.accept();
 
                 Thread t = new Thread(new Runnable() {
@@ -42,7 +42,8 @@ public class Server{
         }
     }
 
-    public void runThread(SocketChannel sc){
+    public void runThread(SocketChannel s){
+        SocketChannel sc = s;
         try{
             //Get the clients username
             ByteBuffer userBuf = ByteBuffer.allocate(1024);
@@ -95,8 +96,8 @@ public class Server{
     public void sendMessageAll(ByteBuffer b){
         for (SocketChannel s : allUsers.values()){
             try{
+                b.position(0);
                 s.write(b);
-                System.out.println(s);
             }
             catch(Exception e){
                 System.out.println("Error in send all.");
