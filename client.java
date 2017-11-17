@@ -26,6 +26,11 @@ class Client{
 		runClient();
 	}
 
+	public void setAdmin(){
+		admin = true;
+		System.out.println("You are now an admin.");
+	}
+
 	public void runClient(){
 		Console cons = System.console();
 		String userName = cons.readLine("Enter your username: ");
@@ -45,7 +50,6 @@ class Client{
 			System.out.println("Connected to Server!");
 
 			//Sends the username to the server and establishes a connection
-			userName = "/u " + userName;
 			ByteBuffer buff = ByteBuffer.wrap(userName.getBytes());
 			sc.write(buff);
 			while(true){
@@ -93,6 +97,10 @@ class Client{
 					break;
 				case "/kick":
 					if(contents.length == 2 && admin == true)
+						return true;
+					break;
+				case "/list":
+					if(contents.length == 1)
 						return true;
 					break;
 			}
@@ -170,30 +178,14 @@ class Client{
 				//System.out.println("read");
 				String message = new String(buff.array());
 				message = message.trim();
-				System.out.println(message);
+				if(message.equals("/admin")){
+					setAdmin();
+				}else{
+					System.out.println(message);
+				}
 			}catch(Exception e){
 				System.out.println("Got an exception in thread");
 			}
-		}
-	}
-
-}
-
-class ClientThread extends Thread{
-
-	SocketChannel sc;
-	ClientThread(SocketChannel channel){
-		sc = channel;
-	}
-	public void run(){
-		try{
-			ByteBuffer buff = ByteBuffer.allocate(1024);
-			sc.read(buff);
-			String message = new String(buff.array());
-			message = message.trim();
-			System.out.println(message);
-		}catch(IOException e){
-			System.out.println("Got an exception in thread");
 		}
 	}
 }
