@@ -50,7 +50,7 @@ public class Server{
             sc.read(userBuf);
             String userName = new String(userBuf.array());
             userName = userName.trim();
-            userName = removeSlash(userName);
+            //userName = removeSlash(userName);
             System.out.println("User added: " + userName);
             //Add to the map
             allUsers.put(userName, sc);
@@ -62,14 +62,15 @@ public class Server{
                 sc.read(buff);
                 String message = new String(buff.array());
                 message.trim();
-                if (message.length() < 1)
-                    break;
-                message = userName + ": " + message.trim();
 
-                System.out.println(message);
-
-                buff = ByteBuffer.wrap(message.getBytes());
-                sendMessageAll(buff);
+                //check if message is a command...
+                if (!isCommand(message)){
+                    //Else send it to all...
+                    message = userName + ": " + message.trim();
+                    System.out.println(message);
+                    buff = ByteBuffer.wrap(message.getBytes());
+                    sendMessageAll(buff);
+                }
             }
 
             sc.close();
@@ -92,6 +93,38 @@ public class Server{
         }
         return sb.toString();
     }
+
+    public boolean isCommand(String m){
+        String[] contents = m.split(" ")
+
+        switch(contents[0]):
+            case "/exit":
+                exit(contents[1]);
+                return true;
+            case "/pm":
+                return true;
+            case "/kick":
+                return true;
+
+        return false;
+    }
+
+    public void sendPM(){
+
+    }
+
+	public void kick(){
+
+	}
+
+	public void exit(String user){
+		for(key i: allUsers.keys()){
+			if i.equals(user){
+				allUsers.get(i).close();
+				allUsers.remove(i);
+			}
+		}
+	}
 
     public void sendMessageAll(ByteBuffer b){
         for (SocketChannel s : allUsers.values()){
