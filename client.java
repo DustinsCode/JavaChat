@@ -23,7 +23,6 @@ class Client{
 		commands.add("/pm");
 		commands.add("/kick");
 
-
 		runClient();
 	}
 
@@ -54,25 +53,23 @@ class Client{
 
 				while(message.equals("")){
 					Thread.sleep(100);
-					message = cons.readLine(">");
+					message = cons.readLine("");
 					message = message.trim();
-					if(validMessage(message)){
+					if(!message.equals("") && validMessage(message)){
 						backspace(message);
 						break;
-					}
-
-					else{
+					}else if(!message.equals("")){
 						System.out.println("Invalid command");
 						message = "";
 					}
 				}
-
 				buff = ByteBuffer.wrap(message.getBytes());
 				sc.write(buff);
 			}
 
 		}catch(Exception e){
 			System.out.println("Got an exception.  Whoops.");
+			System.out.println(e);
 		}
 	}
 
