@@ -18,7 +18,7 @@ class Client{
 	public Client(String ip, int port){
 		portNum = port;
 		ipAddr = ip;
-		admin = false;
+		admin = true;
 		commands.add("/exit");
 		commands.add("/pm");
 		commands.add("/kick");
@@ -171,6 +171,9 @@ class Client{
 
 	private void runThread(SocketChannel sc){
 		while (true){
+			if(!sc.isConnected){
+				break;
+			}
 			try{
 				ByteBuffer buff = ByteBuffer.allocate(1024);
 
@@ -185,6 +188,7 @@ class Client{
 				}
 			}catch(Exception e){
 				System.out.println("Got an exception in thread");
+
 			}
 		}
 	}
