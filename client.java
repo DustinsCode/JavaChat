@@ -92,7 +92,7 @@ class Client{
 				case "/exit":
 					return true;
 				case "/pm":
-					if(contents.length == 2)
+					if(contents.length >= 3)
 						return true;
 					break;
 				case "/kick":
