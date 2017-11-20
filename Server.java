@@ -44,11 +44,12 @@ public class Server{
 
     public void runThread(SocketChannel s){
         SocketChannel sc = s;
+        String userName = "";
         try{
             //Get the clients username
             ByteBuffer userBuf = ByteBuffer.allocate(1024);
             sc.read(userBuf);
-            String userName = new String(userBuf.array());
+            userName = new String(userBuf.array());
             userName = userName.trim();
             //userName = removeSlash(userName);
             System.out.println("User added: " + userName);
@@ -77,8 +78,7 @@ public class Server{
             System.out.println(userName + " has left the chat.");
         }
         catch(IOException e){
-            System.out.println("Exception in the thread.");
-            System.out.println(e);
+            System.out.println(userName + " has disconnected.");
         }
     }
 
@@ -96,6 +96,7 @@ public class Server{
 
     public boolean isCommand(String senderName, SocketChannel sender, String m){
         String[] contents = m.split(" ");
+        contents[0] = contents[0].trim();
 
         switch(contents[0]){
             case "/exit":

@@ -15,10 +15,12 @@ class Client{
 	String ipAddr;
 	ArrayList<String> commands = new ArrayList<>();
 	boolean admin;
+	boolean exit;
 	public Client(String ip, int port){
 		portNum = port;
 		ipAddr = ip;
 		admin = true;
+		exit = false;
 		commands.add("/exit");
 		commands.add("/pm");
 		commands.add("/kick");
@@ -52,7 +54,8 @@ class Client{
 			//Sends the username to the server and establishes a connection
 			ByteBuffer buff = ByteBuffer.wrap(userName.getBytes());
 			sc.write(buff);
-			while(true){
+			while(!exit){
+
 				String message = "";
 
 				while(message.equals("")){
@@ -70,6 +73,7 @@ class Client{
 				buff = ByteBuffer.wrap(message.getBytes());
 				sc.write(buff);
 			}
+			//t.close();
 
 		}catch(Exception e){
 			System.out.println("Got an exception.  Whoops.");
@@ -171,7 +175,7 @@ class Client{
 
 	private void runThread(SocketChannel sc){
 		while (true){
-			if(!sc.isConnected){
+			if(!sc.isConnected()){
 				break;
 			}
 			try{
@@ -181,9 +185,14 @@ class Client{
 				//System.out.println("read");
 				String message = new String(buff.array());
 				message = message.trim();
+
 				if(message.equals("/admin")){
 					setAdmin();
-				}else{
+				}else if (message.length() == 0){
+					System.exit(0);
+					return;
+				}
+				else{
 					System.out.println(message);
 				}
 			}catch(Exception e){
