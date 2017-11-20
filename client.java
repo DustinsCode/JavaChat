@@ -19,7 +19,7 @@ class Client{
 	public Client(String ip, int port){
 		portNum = port;
 		ipAddr = ip;
-		admin = true;
+		admin = false;
 		exit = false;
 		commands.add("/exit");
 		commands.add("/pm");

@@ -18,6 +18,7 @@ public class Server{
     }
 
     public void runServer(){
+		//TODO: ask about closing threads on exit.
         try{
             ServerSocketChannel channel = ServerSocketChannel.open();
             channel.bind(new InetSocketAddress(portNum));
@@ -51,6 +52,13 @@ public class Server{
             sc.read(userBuf);
             userName = new String(userBuf.array());
             userName = userName.trim();
+            if (!checkName(sc, userName)){
+                return;
+            }
+			if(userName.equals("dustin") || userName.equals("walt")){
+				userBuf = ByteBuffer.wrap("/admin".getBytes());
+				sc.write(userBuf);
+			}
             //userName = removeSlash(userName);
             System.out.println("User added: " + userName);
             //Add to the map
@@ -75,12 +83,30 @@ public class Server{
             }
 
             sc.close();
-            System.out.println(userName + " has left the chat.");
         }
         catch(IOException e){
+            allUsers.remove(userName);
             System.out.println(userName + " has disconnected.");
         }
     }
+
+    public boolean checkName(SocketChannel s, String n){
+        for(String i: allUsers.keySet()){
+            if (n.equals(i)){
+                ByteBuffer b = ByteBuffer.wrap("Username in use!".getBytes());
+
+				try{
+					s.write(b);
+				}catch(Exception e){
+					System.out.println("Error in checkName: " + e);
+				}
+                exit(s);
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     public String removeSlash(String s){
         boolean remove = false;
@@ -116,6 +142,10 @@ public class Server{
                 System.out.println("User to kick: " + contents[1]);
                 kick(sender, contents[1]);
                 return true;
+			case "/list":
+				System.out.println(senderName + " requesting user list.");
+				sendList(sender);
+				return true;
         }
 
         return false;
@@ -143,13 +173,10 @@ public class Server{
 		//sendPM(user, "You have been kicked by an admin. Deuces.");
         user = user.trim();
 		for(String i: allUsers.keySet()){
-            System.out.println(i.equals(user));
 			if(i.equals(user)){
-                System.out.println("HIT");
 				SocketChannel kickee = allUsers.get(i);
 				ByteBuffer b = ByteBuffer.wrap("You have been kicked by an admin.".getBytes());
 				try{
-
 					kickee.write(b);
 					kickee.close();
                     System.out.println("Closed: " + user);
@@ -185,6 +212,21 @@ public class Server{
             }
         }
 
+    }
+
+    public void sendList(SocketChannel s){
+        String names = "******** Online ********\n";
+        for (String n : allUsers.keySet()){
+            names += n + "\n";
+        }
+		names += "******** Online ********";
+        try{
+            ByteBuffer b = ByteBuffer.wrap(names.getBytes());
+    		s.write(b);
+        }
+        catch(Exception e){
+            System.out.println("Error sending list " + e);
+        }
     }
 
 
