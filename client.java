@@ -3,6 +3,7 @@ import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
+import java.crypto.*;
 
 /**
 * Encrypted Chat Program Clinet
@@ -16,6 +17,7 @@ class Client{
 	ArrayList<String> commands = new ArrayList<>();
 	boolean admin;
 	boolean exit;
+	SecretKey sKey;
 	public Client(String ip, int port){
 		portNum = port;
 		ipAddr = ip;
@@ -24,7 +26,7 @@ class Client{
 		commands.add("/exit");
 		commands.add("/pm");
 		commands.add("/kick");
-
+		sKey = generateAESKey();
 		runClient();
 	}
 
@@ -199,6 +201,22 @@ class Client{
 				System.out.println("Got an exception in thread");
 
 			}
+		}
+	}
+
+	/**
+	* Genereates AESKey for client.
+	* */
+	public SecretKey generateAESKey(){
+		try{
+			KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+			keyGen.init(128);
+			SecretKey secKey = keyGen.generateKey();
+			return secKey;
+		}catch(Exception e){
+			System.out.println("Key Generation Exception");
+			System.exit(1);
+			return null;
 		}
 	}
 }
