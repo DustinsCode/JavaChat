@@ -6,6 +6,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Iterator;
+import javax.crypto.*;
+import javax.crypto.spec.*;
+import java.security.*;
+import java.security.spec.*;
+import javax.xml.bind.DatatypeConverter;
 
 public class Server{
     private int portNum;
@@ -255,4 +260,22 @@ public class Server{
         Server s = new Server(portNum);
     }
 
+}
+
+class SocketKey{
+    private SocketChannel chan;
+    private SecretKey key;
+
+    public SocketKey(SocketChannel sc, SecretKey sk){
+        chan = sc;
+        key = sk;
+    }
+
+    public SocketChannel getChannel(){
+        return sc;
+    }
+
+    public SecretKey getSecret(){
+        return sk;
+    }
 }
