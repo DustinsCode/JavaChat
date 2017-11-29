@@ -55,12 +55,19 @@ class Client{
 
 	public void runClient(){
 		Console cons = System.console();
-		String userName = cons.readLine("Enter your username: ");
 
 		try{
 			SocketChannel sc = SocketChannel.open();
 			sc.connect(new InetSocketAddress(ipAddr, portNum));
+
+			//wait for public key from server
 			waitForPubKey(sc);
+
+			//Send our private key to the server
+			byte[] secArray = RSAEncrypt(pubKey.getEncoded());
+			ByteBuffer b = ByteBuffer.wrap(secArray);
+			sc.write(b);
+			String userName = cons.readLine("Enter your username: ");
 			Thread t = new Thread(new Runnable() {
 				public void run() {
 					//Code to run in thread
@@ -224,7 +231,7 @@ class Client{
 
 	private void waitForPubKey(SocketChannel sc){
 		try{
-			ByteBuffer b = ByteBuffer.allocate(1024);
+			ByteBuffer b = ByteBuffer.allocate(294);
 			sc.read(b);
 			byte[] keybytes = b.array();
 			X509EncodedKeySpec keyspec = new X509EncodedKeySpec(keybytes);
