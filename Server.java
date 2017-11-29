@@ -67,7 +67,9 @@ public class Server{
             //userName = removeSlash(userName);
             System.out.println("User added: " + userName);
             //Add to the map
+
             allUsers.put(userName, sc);
+            //allUsers.put(userName, new SocketKey(sc, key))
 
             boolean connected = true;
             //Send message to all users on the server.
@@ -272,10 +274,10 @@ class SocketKey{
     }
 
     public SocketChannel getChannel(){
-        return sc;
+        return chan;
     }
 
     public SecretKey getSecret(){
-        return sk;
+        return key;
     }
 }
