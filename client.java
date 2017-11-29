@@ -3,7 +3,11 @@ import java.net.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
-import java.crypto.*;
+import javax.crypto.*;
+import javax.crypto.spec.*;
+import java.security.*;
+import java.security.spec.*;
+import javax.xml.bind.DatatypeConverter;
 
 /**
 * Encrypted Chat Program Clinet
@@ -18,6 +22,7 @@ class Client{
 	boolean admin;
 	boolean exit;
 	SecretKey sKey;
+	PublicKey pubKey;
 	public Client(String ip, int port){
 		portNum = port;
 		ipAddr = ip;
@@ -29,6 +34,19 @@ class Client{
 		sKey = generateAESKey();
 		runClient();
 	}
+
+	public byte[] RSAEncrypt(byte[] plaintext){
+        try{
+            Cipher c = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding");
+            c.init(Cipher.ENCRYPT_MODE,pubKey);
+            byte[] ciphertext=c.doFinal(plaintext);
+            return ciphertext;
+        }catch(Exception e){
+            System.out.println("RSA Encrypt Exception");
+            System.exit(1);
+            return null;
+        }
+    }
 
 	public void setAdmin(){
 		admin = true;
@@ -42,7 +60,7 @@ class Client{
 		try{
 			SocketChannel sc = SocketChannel.open();
 			sc.connect(new InetSocketAddress(ipAddr, portNum));
-
+			waitForPubKey(sc);
 			Thread t = new Thread(new Runnable() {
 				public void run() {
 					//Code to run in thread
@@ -204,10 +222,24 @@ class Client{
 		}
 	}
 
+	private void waitForPubKey(SocketChannel sc){
+		try{
+			ByteBuffer b = ByteBuffer.allocate(1024);
+			sc.read(b);
+			byte[] keybytes = b.array();
+			X509EncodedKeySpec keyspec = new X509EncodedKeySpec(keybytes);
+			KeyFactory rsafactory = KeyFactory.getInstance("RSA");
+			pubKey = rsafactory.generatePublic(keyspec);
+		}catch(Exception e){
+			System.out.println("Public Key Exception");
+			System.exit(1);
+		}
+	}
+
 	/**
 	* Genereates AESKey for client.
 	* */
-	public SecretKey generateAESKey(){
+	private SecretKey generateAESKey(){
 		try{
 			KeyGenerator keyGen = KeyGenerator.getInstance("AES");
 			keyGen.init(128);
