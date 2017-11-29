@@ -15,10 +15,20 @@ import javax.xml.bind.DatatypeConverter;
 public class Server{
     private int portNum;
     private Map<String,SocketChannel> allUsers;
+    private cryptotest crypt = new cryptotest();
+    private PublicKey pubKey;
+    private PrivateKey privKey;
 
     public Server(int port){
         portNum = port;
         allUsers =  new ConcurrentHashMap<String,SocketChannel>();
+
+        //Generate public and private keys.
+        crypt.setPublicKey("RSApub.der");
+        crypt.setPrivateKey("RSApriv.der");
+        pubKey = crypt.getPublicKey();
+        privKey = crypt.getPrivateKey();
+
         runServer();
     }
 
@@ -48,10 +58,18 @@ public class Server{
         }
     }
 
+
+
     public void runThread(SocketChannel s){
         SocketChannel sc = s;
         String userName = "";
         try{
+            byte[] keyBytes = pubKey.getEncoded();
+            ByteBuffer keyBuff = ByteBuffer.wrap(keyBytes);
+            System.out.println(keyBytes.length);
+            sc.write(keyBuff);
+
+
             //Get the clients username
             ByteBuffer userBuf = ByteBuffer.allocate(1024);
             sc.read(userBuf);
@@ -69,6 +87,8 @@ public class Server{
             //Add to the map
 
             allUsers.put(userName, sc);
+
+            //**** USE THIS WHEN THE MAP IS CHANED *******
             //allUsers.put(userName, new SocketKey(sc, key))
 
             boolean connected = true;

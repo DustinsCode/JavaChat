@@ -122,4 +122,10 @@ public class cryptotest{
             System.exit(1);
         }
     }
+    public PublicKey getPublicKey(){
+        return pubKey;
+    }
+    public PrivateKey getPrivateKey(){
+        return privKey;
+    }
 }
