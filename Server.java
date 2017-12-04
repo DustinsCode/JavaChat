@@ -64,17 +64,32 @@ public class Server{
         SocketChannel sc = s;
         String userName = "";
         try{
+            //Send over the public key to the client.
             byte[] keyBytes = pubKey.getEncoded();
             ByteBuffer keyBuff = ByteBuffer.wrap(keyBytes);
-            System.out.println(keyBytes.length);
             sc.write(keyBuff);
+            System.out.println("Sent public key. Length: " + keyBytes.length);
 
+            //Get the secret key from the client. (Also decrypt it)
+            ByteBuffer secKeyBuff = ByteBuffer.allocate(256);
+            sc.read(secKeyBuff);
+            byte[] dcrypKey = crypt.RSADecrypt(secKeyBuff.array());
+            SecretKey secKey = new SecretKeySpec(dcrypKey, 0, dcrypKey.length, "DES");
+            System.out.println("Received and decrypted secret key.");
 
-            //Get the clients username
+            //Take in the IV bytes that which we need for encrypting with the secret key.
+            ByteBuffer IVBytesBuff = ByteBuffer.allocate(16);
+            sc.read(IVBytesBuff);
+            IvParameterSpec iv = new IvParameterSpec(IVBytesBuff.array());
+            System.out.println("Received IV stuff. Length: " + IVBytesBuff.array().length);
+
+            //Get the clients username and decrypt.
             ByteBuffer userBuf = ByteBuffer.allocate(1024);
             sc.read(userBuf);
-            userName = new String(userBuf.array());
+            crypt.decrypt(userBuf.array(), secKey, iv);
+            userName = new String(crypt.decrypt(userBuf.array(), secKey, iv));
             userName = userName.trim();
+            System.out.println(userName);
             if (!checkName(sc, userName)){
                 return;
             }
