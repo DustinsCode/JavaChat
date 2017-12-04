@@ -74,8 +74,9 @@ public class Server{
             ByteBuffer secKeyBuff = ByteBuffer.allocate(256);
             sc.read(secKeyBuff);
             byte[] dcrypKey = crypt.RSADecrypt(secKeyBuff.array());
-            SecretKey secKey = new SecretKeySpec(dcrypKey, 0, dcrypKey.length, "DES");
-            System.out.println("Received and decrypted secret key.");
+            SecretKey secKey = new SecretKeySpec(dcrypKey,"AES");
+            System.out.println("Received and decrypted secret key. Length: " + dcrypKey.length);
+            System.out.println("Raw: " + new String(secKey.getEncoded()));
 
             //Take in the IV bytes that which we need for encrypting with the secret key.
             ByteBuffer IVBytesBuff = ByteBuffer.allocate(16);

@@ -38,7 +38,7 @@ public class cryptotest{
             byte[] ciphertext = c.doFinal(plaintext);
             return ciphertext;
         }catch(Exception e){
-            System.out.println("AES Encrypt Exception");
+            System.out.println("AES Encrypt Exception" + e);
             System.exit(1);
             return null;
         }
@@ -50,7 +50,7 @@ public class cryptotest{
             byte[] plaintext = c.doFinal(ciphertext);
             return plaintext;
         }catch(Exception e){
-            System.out.println("AES Decrypt Exception");
+            System.out.println("AES Decrypt Exception " + e);
             System.exit(1);
             return null;
         }
