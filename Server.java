@@ -83,6 +83,7 @@ public class Server{
             sc.read(IVBytesBuff);
             IvParameterSpec iv = new IvParameterSpec(IVBytesBuff.array());
             System.out.println("Received IV stuff. Length: " + IVBytesBuff.array().length);
+            System.out.println("Raw IV: " + IVBytesBuff.array());
 
             //Get the clients username and decrypt.
             ByteBuffer userBuf = ByteBuffer.allocate(1024);
