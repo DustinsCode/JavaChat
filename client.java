@@ -42,16 +42,35 @@ class Client{
             byte[] ciphertext=c.doFinal(plaintext);
             return ciphertext;
         }catch(Exception e){
-            System.out.println("RSA Encrypt Exception");
+            System.out.println("RSA Encrypt Exception\n" + e);
             System.exit(1);
             return null;
         }
     }
 
+	/**
+	* Sets the admin rights of the client.
+	**/
 	public void setAdmin(){
 		admin = true;
 		System.out.println("You are now an admin.");
 	}
+
+	/**
+	* Encrypts messages and other things.
+	**/
+	public byte[] encrypt(byte[] plaintext, SecretKey secKey, IvParameterSpec iv){
+        try{
+            Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            c.init(Cipher.ENCRYPT_MODE,secKey,iv);
+            byte[] ciphertext = c.doFinal(plaintext);
+            return ciphertext;
+        }catch(Exception e){
+            System.out.println("AES Encrypt Exception");
+            System.exit(1);
+            return null;
+        }
+    }
 
 	public void runClient(){
 		Console cons = System.console();
@@ -64,14 +83,25 @@ class Client{
 			waitForPubKey(sc);
 
 			//Send our private key to the server
-			byte[] secArray = RSAEncrypt(pubKey.getEncoded());
+			byte[] secArray = RSAEncrypt(sKey.getEncoded());
+			System.out.println("size: " + secArray.length);
 			ByteBuffer b = ByteBuffer.wrap(secArray);
 			sc.write(b);
+
+			//Create and send IvParameterSpec here.
+			SecureRandom r = new SecureRandom();
+	        byte ivbytes[] = new byte[16];
+	        r.nextBytes(ivbytes);
+	        IvParameterSpec iv = new IvParameterSpec(ivbytes);
+			b = ByteBuffer.wrap(ivbytes);
+			sc.write(b);
+
+			//User's name.
 			String userName = cons.readLine("Enter your username: ");
 			Thread t = new Thread(new Runnable() {
 				public void run() {
 					//Code to run in thread
-					runThread(sc);
+					runThread(sc, iv);
 				}
 			});
 			t.start();
@@ -79,7 +109,8 @@ class Client{
 			System.out.println("Connected to Server!");
 
 			//Sends the username to the server and establishes a connection
-			ByteBuffer buff = ByteBuffer.wrap(userName.getBytes());
+			byte[] userNameBytes = encrypt(userName.getBytes(), sKey, iv);
+			ByteBuffer buff = ByteBuffer.wrap(userNameBytes);
 			sc.write(buff);
 			while(!exit){
 
@@ -97,7 +128,7 @@ class Client{
 						message = "";
 					}
 				}
-				buff = ByteBuffer.wrap(message.getBytes());
+				buff = ByteBuffer.wrap(encrypt(message.getBytes(), sKey, iv));
 				sc.write(buff);
 			}
 			//t.close();
@@ -200,7 +231,20 @@ class Client{
 		}
 	}
 
-	private void runThread(SocketChannel sc){
+	public byte[] decrypt(byte[] ciphertext, SecretKey secKey, IvParameterSpec iv){
+		try{
+			Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			c.init(Cipher.DECRYPT_MODE,secKey,iv);
+			byte[] plaintext = c.doFinal(ciphertext);
+			return plaintext;
+		}catch(Exception e){
+			System.out.println("AES Decrypt Exception");
+			System.exit(1);
+			return null;
+		}
+	}
+
+	private void runThread(SocketChannel sc, IvParameterSpec iv){
 		while (true){
 			if(!sc.isConnected()){
 				break;
@@ -210,7 +254,8 @@ class Client{
 
 				sc.read(buff);
 				//System.out.println("read");
-				String message = new String(buff.array());
+
+				String message = new String(decrypt(buff.array(), sKey, iv));
 				message = message.trim();
 
 				if(message.equals("/admin")){
@@ -224,11 +269,13 @@ class Client{
 				}
 			}catch(Exception e){
 				System.out.println("Got an exception in thread");
-
 			}
 		}
 	}
 
+	/**
+	*  Waits for public key from server
+	**/
 	private void waitForPubKey(SocketChannel sc){
 		try{
 			ByteBuffer b = ByteBuffer.allocate(294);
