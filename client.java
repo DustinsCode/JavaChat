@@ -101,7 +101,7 @@ class Client{
 			Thread t = new Thread(new Runnable() {
 				public void run() {
 					//Code to run in thread
-					runThread(sc);
+					runThread(sc, iv);
 				}
 			});
 			t.start();
@@ -109,7 +109,8 @@ class Client{
 			System.out.println("Connected to Server!");
 
 			//Sends the username to the server and establishes a connection
-			ByteBuffer buff = ByteBuffer.wrap(userName.getBytes());
+			byte[] userNameBytes = encrypt(userName.getBytes(), sKey, iv);
+			ByteBuffer buff = ByteBuffer.wrap(userNameBytes);
 			sc.write(buff);
 			while(!exit){
 
@@ -127,7 +128,7 @@ class Client{
 						message = "";
 					}
 				}
-				buff = ByteBuffer.wrap(message.getBytes());
+				buff = ByteBuffer.wrap(encrypt(message.getBytes(), sKey, iv));
 				sc.write(buff);
 			}
 			//t.close();
@@ -230,7 +231,20 @@ class Client{
 		}
 	}
 
-	private void runThread(SocketChannel sc){
+	public byte[] decrypt(byte[] ciphertext, SecretKey secKey, IvParameterSpec iv){
+		try{
+			Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			c.init(Cipher.DECRYPT_MODE,secKey,iv);
+			byte[] plaintext = c.doFinal(ciphertext);
+			return plaintext;
+		}catch(Exception e){
+			System.out.println("AES Decrypt Exception");
+			System.exit(1);
+			return null;
+		}
+	}
+
+	private void runThread(SocketChannel sc, IvParameterSpec iv){
 		while (true){
 			if(!sc.isConnected()){
 				break;
@@ -240,7 +254,8 @@ class Client{
 
 				sc.read(buff);
 				//System.out.println("read");
-				String message = new String(buff.array());
+
+				String message = new String(decrypt(buff.array(), sKey, iv));
 				message = message.trim();
 
 				if(message.equals("/admin")){
