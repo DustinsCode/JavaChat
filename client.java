@@ -83,6 +83,8 @@ class Client{
 			waitForPubKey(sc);
 
 			//Send our private key to the server
+			System.out.println("Unencrypted key length: " + sKey.getEncoded().length);
+			System.out.println("Secret Key: " + new String(sKey.getEncoded()));
 			byte[] secArray = RSAEncrypt(sKey.getEncoded());
 			System.out.println("size: " + secArray.length);
 			ByteBuffer b = ByteBuffer.wrap(secArray);
@@ -110,6 +112,9 @@ class Client{
 
 			//Sends the username to the server and establishes a connection
 			byte[] userNameBytes = encrypt(userName.getBytes(), sKey, iv);
+			String altUser = new String(decrypt(userNameBytes, sKey, iv));
+			System.out.println("Encrypted Username: " + new String(userNameBytes));
+			System.out.println("Decrepted Username: " + altUser);
 			ByteBuffer buff = ByteBuffer.wrap(userNameBytes);
 			sc.write(buff);
 			while(!exit){
@@ -238,7 +243,7 @@ class Client{
 			byte[] plaintext = c.doFinal(ciphertext);
 			return plaintext;
 		}catch(Exception e){
-			System.out.println("AES Decrypt Exception");
+			System.out.println("AES Decrypt Exception\n" + e);
 			System.exit(1);
 			return null;
 		}
