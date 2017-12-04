@@ -42,16 +42,35 @@ class Client{
             byte[] ciphertext=c.doFinal(plaintext);
             return ciphertext;
         }catch(Exception e){
-            System.out.println("RSA Encrypt Exception");
+            System.out.println("RSA Encrypt Exception\n" + e);
             System.exit(1);
             return null;
         }
     }
 
+	/**
+	* Sets the admin rights of the client.
+	**/
 	public void setAdmin(){
 		admin = true;
 		System.out.println("You are now an admin.");
 	}
+
+	/**
+	* Encrypts messages and other things.
+	**/
+	public byte[] encrypt(byte[] plaintext, SecretKey secKey, IvParameterSpec iv){
+        try{
+            Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            c.init(Cipher.ENCRYPT_MODE,secKey,iv);
+            byte[] ciphertext = c.doFinal(plaintext);
+            return ciphertext;
+        }catch(Exception e){
+            System.out.println("AES Encrypt Exception");
+            System.exit(1);
+            return null;
+        }
+    }
 
 	public void runClient(){
 		Console cons = System.console();
@@ -64,9 +83,20 @@ class Client{
 			waitForPubKey(sc);
 
 			//Send our private key to the server
-			byte[] secArray = RSAEncrypt(pubKey.getEncoded());
+			byte[] secArray = RSAEncrypt(sKey.getEncoded());
+			System.out.println("size: " + secArray.length);
 			ByteBuffer b = ByteBuffer.wrap(secArray);
 			sc.write(b);
+
+			//Create and send IvParameterSpec here.
+			SecureRandom r = new SecureRandom();
+	        byte ivbytes[] = new byte[16];
+	        r.nextBytes(ivbytes);
+	        IvParameterSpec iv = new IvParameterSpec(ivbytes);
+			b = ByteBuffer.wrap(ivbytes);
+			sc.write(b);
+
+			//User's name.
 			String userName = cons.readLine("Enter your username: ");
 			Thread t = new Thread(new Runnable() {
 				public void run() {
@@ -224,11 +254,13 @@ class Client{
 				}
 			}catch(Exception e){
 				System.out.println("Got an exception in thread");
-
 			}
 		}
 	}
 
+	/**
+	*  Waits for public key from server
+	**/
 	private void waitForPubKey(SocketChannel sc){
 		try{
 			ByteBuffer b = ByteBuffer.allocate(294);
