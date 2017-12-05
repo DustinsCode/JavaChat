@@ -299,6 +299,17 @@ public class Server{
         Server s = new Server(portNum);
     }
 
+    public byte[] addArray(byte[] arr){
+        byte[] temp = new Byte[1024];
+        for (int i = 0; i < temp.length; i++){
+            if (i < arr.length)
+                temp[i] = arr[i];
+            else
+                temp[i] = null;
+        }
+        return temp;
+    }
+
 }
 
 class SocketKey{
