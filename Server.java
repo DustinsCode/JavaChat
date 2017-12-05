@@ -14,14 +14,14 @@ import javax.xml.bind.DatatypeConverter;
 
 public class Server{
     private int portNum;
-    private Map<String,SocketChannel> allUsers;
+    private Map<String,SocketKey> allUsers;
     private cryptotest crypt = new cryptotest();
     private PublicKey pubKey;
     private PrivateKey privKey;
 
     public Server(int port){
         portNum = port;
-        allUsers =  new ConcurrentHashMap<String,SocketChannel>();
+        allUsers =  new ConcurrentHashMap<String,SocketKey>();
 
         //Generate public and private keys.
         crypt.setPublicKey("RSApub.der");
@@ -68,27 +68,22 @@ public class Server{
             byte[] keyBytes = pubKey.getEncoded();
             ByteBuffer keyBuff = ByteBuffer.wrap(keyBytes);
             sc.write(keyBuff);
-            System.out.println("Sent public key. Length: " + keyBytes.length);
 
             //Get the secret key from the client. (Also decrypt it)
             ByteBuffer secKeyBuff = ByteBuffer.allocate(256);
             sc.read(secKeyBuff);
             byte[] dcrypKey = crypt.RSADecrypt(secKeyBuff.array());
             SecretKey secKey = new SecretKeySpec(dcrypKey,"AES");
-            System.out.println("Received and decrypted secret key. Length: " + dcrypKey.length);
-            System.out.println("Raw: " + new String(secKey.getEncoded()));
 
             //Take in the IV bytes that which we need for encrypting with the secret key.
             ByteBuffer IVBytesBuff = ByteBuffer.allocate(16);
             sc.read(IVBytesBuff);
             IvParameterSpec iv = new IvParameterSpec(IVBytesBuff.array());
-            System.out.println("Received IV stuff. Length: " + IVBytesBuff.array().length);
-            System.out.println("Raw IV: " + IVBytesBuff.array());
 
             //Get the clients username and decrypt.
             ByteBuffer userBuf = ByteBuffer.allocate(1024);
             sc.read(userBuf);
-            crypt.decrypt(userBuf.array(), secKey, iv);
+            // crypt.decrypt(userBuf.array(), secKey, iv);
             userName = new String(crypt.decrypt(userBuf.array(), secKey, iv));
             userName = userName.trim();
             System.out.println(userName);
@@ -103,17 +98,17 @@ public class Server{
             System.out.println("User added: " + userName);
             //Add to the map
 
-            allUsers.put(userName, sc);
+            //allUsers.put(userName, sc);
 
             //**** USE THIS WHEN THE MAP IS CHANED *******
-            //allUsers.put(userName, new SocketKey(sc, key))
+            allUsers.put(userName, new SocketKey(sc, secKey, iv));
 
             boolean connected = true;
             //Send message to all users on the server.
             while (connected){
                 ByteBuffer buff = ByteBuffer.allocate(1024);
                 sc.read(buff);
-                String message = new String(buff.array());
+                String message = new String(crypt.decrypt(buff.array(), secKey, iv));
                 message.trim();
 
                 //check if message is a command...
@@ -201,9 +196,10 @@ public class Server{
 				String message = "PM from " + sender + ": " + m;
 				try{
 					ByteBuffer buff = ByteBuffer.wrap(message.getBytes());
-					allUsers.get(i).write(buff);
+					allUsers.get(i).getChannel().write(buff);
 					message = "PM to " + user + ": " + m;
 					buff = ByteBuffer.wrap(message.getBytes());
+                    
 					s.write(buff);
 				}catch(Exception e){
 					System.out.println("Error sending PM: " + e);
@@ -218,7 +214,7 @@ public class Server{
         user = user.trim();
 		for(String i: allUsers.keySet()){
 			if(i.equals(user)){
-				SocketChannel kickee = allUsers.get(i);
+				SocketChannel kickee = allUsers.get(i).getChannel();
 				ByteBuffer b = ByteBuffer.wrap("You have been kicked by an admin.".getBytes());
 				try{
 					kickee.write(b);
@@ -245,10 +241,10 @@ public class Server{
 	}
 
     public void sendMessageAll(ByteBuffer b){
-        for (SocketChannel s : allUsers.values()){
+        for (SocketKey s : allUsers.values()){
             try{
                 b.position(0);
-                s.write(b);
+                s.getChannel().write(ByteBuffer.wrap(crypt.encrypt(formatArray(b.array()), s.getSecret(), s.getIv())));
             }
             catch(Exception e){
                 System.out.println("Error in send all.");
@@ -299,7 +295,7 @@ public class Server{
         Server s = new Server(portNum);
     }
 
-	public byte[] addArray(byte[] arr){
+	public byte[] formatArray(byte[] arr){
         byte[] temp = new byte[1024];
         for (int i = 0; i < temp.length; i++){
             if (i < arr.length)
@@ -313,10 +309,12 @@ public class Server{
 class SocketKey{
     private SocketChannel chan;
     private SecretKey key;
+    private IvParameterSpec iv;
 
-    public SocketKey(SocketChannel sc, SecretKey sk){
+    public SocketKey(SocketChannel sc, SecretKey sk, IvParameterSpec ivps){
         chan = sc;
         key = sk;
+		iv = ivps;
     }
 
     public SocketChannel getChannel(){
@@ -326,4 +324,8 @@ class SocketKey{
     public SecretKey getSecret(){
         return key;
     }
+
+	public IvParameterSpec getIv(){
+		return iv;
+	}
 }
