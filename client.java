@@ -83,10 +83,7 @@ class Client{
 			waitForPubKey(sc);
 
 			//Send our private key to the server
-			System.out.println("Unencrypted key length: " + sKey.getEncoded().length);
-			System.out.println("Secret Key: " + new String(sKey.getEncoded()));
 			byte[] secArray = RSAEncrypt(sKey.getEncoded());
-			System.out.println("size: " + secArray.length);
 			ByteBuffer b = ByteBuffer.wrap(secArray);
 			sc.write(b);
 
@@ -94,8 +91,6 @@ class Client{
 			SecureRandom r = new SecureRandom();
 	        byte ivbytes[] = new byte[16];
 	        r.nextBytes(ivbytes);
-			System.out.println("IV bytes size: " + ivbytes.length);
-			System.out.println("IV bytes: " + ivbytes);
 	        IvParameterSpec iv = new IvParameterSpec(ivbytes);
 			b = ByteBuffer.wrap(ivbytes);
 			sc.write(b);
@@ -115,7 +110,6 @@ class Client{
 			//Sends the username to the server and establishes a connection
 			byte[] userNameBytes = encrypt(formatArray(userName.getBytes()), sKey, iv);
 			String altUser = new String(decrypt(userNameBytes, sKey, iv));
-			System.out.println("Decrepted Username: " + altUser);
 			ByteBuffer buff = ByteBuffer.wrap(userNameBytes);
 			sc.write(buff);
 			while(!exit){
