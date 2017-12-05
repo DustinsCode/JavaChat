@@ -94,7 +94,8 @@ class Client{
 			SecureRandom r = new SecureRandom();
 	        byte ivbytes[] = new byte[16];
 	        r.nextBytes(ivbytes);
-			System.out.println("IV bytes: " + new String(ivbytes));
+			System.out.println("IV bytes size: " + ivbytes.length);
+			System.out.println("IV bytes: " + ivbytes);
 	        IvParameterSpec iv = new IvParameterSpec(ivbytes);
 			b = ByteBuffer.wrap(ivbytes);
 			sc.write(b);
