@@ -113,7 +113,7 @@ class Client{
 			System.out.println("Connected to Server!");
 
 			//Sends the username to the server and establishes a connection
-			byte[] userNameBytes = encrypt(addArray(userName.getBytes()), sKey, iv);
+			byte[] userNameBytes = encrypt(formatArray(userName.getBytes()), sKey, iv);
 			String altUser = new String(decrypt(userNameBytes, sKey, iv));
 			System.out.println("Decrepted Username: " + altUser);
 			ByteBuffer buff = ByteBuffer.wrap(userNameBytes);
@@ -134,7 +134,7 @@ class Client{
 						message = "";
 					}
 				}
-				buff = ByteBuffer.wrap(encrypt(addArray(message.getBytes()), sKey, iv));
+				buff = ByteBuffer.wrap(encrypt(formatArray(message.getBytes()), sKey, iv));
 				sc.write(buff);
 			}
 			//t.close();
@@ -250,7 +250,7 @@ class Client{
 		}
 	}
 
-	public byte[] addArray(byte[] arr){
+	public byte[] formatArray(byte[] arr){
         byte[] temp = new byte[1024];
         for (int i = 0; i < temp.length; i++){
             if (i < arr.length)

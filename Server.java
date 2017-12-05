@@ -299,7 +299,7 @@ public class Server{
         Server s = new Server(portNum);
     }
 
-	public byte[] addArray(byte[] arr){
+	public byte[] formatArray(byte[] arr){
         byte[] temp = new byte[1024];
         for (int i = 0; i < temp.length; i++){
             if (i < arr.length)
