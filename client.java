@@ -61,12 +61,12 @@ class Client{
 	**/
 	public byte[] encrypt(byte[] plaintext, SecretKey secKey, IvParameterSpec iv){
         try{
-            Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            Cipher c = Cipher.getInstance("AES/CBC/NoPadding");
             c.init(Cipher.ENCRYPT_MODE,secKey,iv);
             byte[] ciphertext = c.doFinal(plaintext);
             return ciphertext;
         }catch(Exception e){
-            System.out.println("AES Encrypt Exception");
+            System.out.println("AES Encrypt Exception\n" + e);
             System.exit(1);
             return null;
         }
@@ -113,9 +113,8 @@ class Client{
 			System.out.println("Connected to Server!");
 
 			//Sends the username to the server and establishes a connection
-			byte[] userNameBytes = encrypt(userName.getBytes(), sKey, iv);
+			byte[] userNameBytes = encrypt(addArray(userName.getBytes()), sKey, iv);
 			String altUser = new String(decrypt(userNameBytes, sKey, iv));
-			System.out.println("Encrypted Username: " + new String(userNameBytes));
 			System.out.println("Decrepted Username: " + altUser);
 			ByteBuffer buff = ByteBuffer.wrap(userNameBytes);
 			sc.write(buff);
@@ -135,7 +134,7 @@ class Client{
 						message = "";
 					}
 				}
-				buff = ByteBuffer.wrap(encrypt(message.getBytes(), sKey, iv));
+				buff = ByteBuffer.wrap(encrypt(addArray(message.getBytes()), sKey, iv));
 				sc.write(buff);
 			}
 			//t.close();
@@ -240,7 +239,7 @@ class Client{
 
 	public byte[] decrypt(byte[] ciphertext, SecretKey secKey, IvParameterSpec iv){
 		try{
-			Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			Cipher c = Cipher.getInstance("AES/CBC/NoPadding");
 			c.init(Cipher.DECRYPT_MODE,secKey,iv);
 			byte[] plaintext = c.doFinal(ciphertext);
 			return plaintext;
@@ -250,6 +249,15 @@ class Client{
 			return null;
 		}
 	}
+
+	public byte[] addArray(byte[] arr){
+        byte[] temp = new byte[1024];
+        for (int i = 0; i < temp.length; i++){
+            if (i < arr.length)
+                temp[i] = arr[i];
+        }
+        return temp;
+    }
 
 	private void runThread(SocketChannel sc, IvParameterSpec iv){
 		while (true){

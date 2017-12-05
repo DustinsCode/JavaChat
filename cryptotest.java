@@ -33,7 +33,7 @@ public class cryptotest{
     }
     public byte[] encrypt(byte[] plaintext, SecretKey secKey, IvParameterSpec iv){
         try{
-            Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            Cipher c = Cipher.getInstance("AES/CBC/NoPadding");
             c.init(Cipher.ENCRYPT_MODE,secKey,iv);
             byte[] ciphertext = c.doFinal(plaintext);
             return ciphertext;
@@ -45,7 +45,7 @@ public class cryptotest{
     }
     public byte[] decrypt(byte[] ciphertext, SecretKey secKey, IvParameterSpec iv){
         try{
-            Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            Cipher c = Cipher.getInstance("AES/CBC/NoPadding");
             c.init(Cipher.DECRYPT_MODE,secKey,iv);
             byte[] plaintext = c.doFinal(ciphertext);
             return plaintext;
