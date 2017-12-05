@@ -83,22 +83,19 @@ public class Server{
             //Get the clients username and decrypt.
             ByteBuffer userBuf = ByteBuffer.allocate(1024);
             sc.read(userBuf);
-            // crypt.decrypt(userBuf.array(), secKey, iv);
             userName = new String(crypt.decrypt(userBuf.array(), secKey, iv));
             userName = userName.trim();
             System.out.println(userName);
+
             if (!checkName(sc, userName)){
                 return;
             }
 			if(userName.equals("dustin") || userName.equals("walt")){
 				userBuf = ByteBuffer.wrap("/admin".getBytes());
-				sc.write(userBuf);
+				sc.write(ByteBuffer.wrap(crypt.encrypt(formatArray(userBuf.array()), secKey, iv)));
 			}
             //userName = removeSlash(userName);
             System.out.println("User added: " + userName);
-            //Add to the map
-
-            //allUsers.put(userName, sc);
 
             //**** USE THIS WHEN THE MAP IS CHANED *******
             allUsers.put(userName, new SocketKey(sc, secKey, iv));
@@ -190,17 +187,18 @@ public class Server{
         return false;
     }
 
-    public void sendPM(String sender, SocketChannel s, String user, String m){
+    public void sendPM(String sender, SocketChannel sChan, String user, String m){
         for(String i: allUsers.keySet()){
 			if(i.equals(user)){
 				String message = "PM from " + sender + ": " + m;
 				try{
-					ByteBuffer buff = ByteBuffer.wrap(message.getBytes());
-					allUsers.get(i).getChannel().write(buff);
+					SocketKey s = allUsers.get(i);
+					ByteBuffer buff = ByteBuffer.wrap(crypt.encrypt(formatArray(message.getBytes()), s.getSecret(), s.getIv()));
+					s.getChannel().write(buff);
 					message = "PM to " + user + ": " + m;
-					buff = ByteBuffer.wrap(message.getBytes());
-                    
-					s.write(buff);
+					SocketKey s2 = allUsers.get(sender);
+					buff = ByteBuffer.wrap(crypt.encrypt(formatArray(message.getBytes()), s2.getSecret(), s2.getIv()));
+					s2.getChannel().write(buff);
 				}catch(Exception e){
 					System.out.println("Error sending PM: " + e);
 				}
