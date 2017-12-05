@@ -122,6 +122,7 @@ class Client{
 					message = message.trim();
 					if(!message.equals("") && validMessage(message)){
 						backspace(message);
+
 						break;
 					}else if(!message.equals("")){
 						System.out.println("Invalid command");
@@ -130,6 +131,11 @@ class Client{
 				}
 				buff = ByteBuffer.wrap(encrypt(formatArray(message.getBytes()), sKey, iv));
 				sc.write(buff);
+				if(message.equals("/exit")){
+					System.out.println("Disconnecting..");
+					System.exit(0);
+				}
+
 			}
 			//t.close();
 
@@ -269,7 +275,8 @@ class Client{
 
 				if(message.equals("/admin")){
 					setAdmin();
-				}else if (message.length() == 0){
+				}else if (message.equals("You have been kicked by an admin.")){
+					System.out.println(message);
 					System.exit(0);
 					return;
 				}
