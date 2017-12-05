@@ -176,11 +176,11 @@ public class Server{
                 return true;
             case "/kick":
                 System.out.println("User to kick: " + contents[1]);
-                kick(sender, contents[1]);
+                kick(allUsers.get(senderName), contents[1]);
                 return true;
 			case "/list":
 				System.out.println(senderName + " requesting user list.");
-				sendList(sender);
+				sendList(allUsers.get(senderName));
 				return true;
         }
 
@@ -207,15 +207,16 @@ public class Server{
 		return;
     }
 
-	public void kick(SocketChannel s, String user){
+	public void kick(SocketKey s, String user){
 		//sendPM(user, "You have been kicked by an admin. Deuces.");
         user = user.trim();
 		for(String i: allUsers.keySet()){
 			if(i.equals(user)){
 				SocketChannel kickee = allUsers.get(i).getChannel();
+				SocketKey kickeeKey = allUsers.get(i);
 				ByteBuffer b = ByteBuffer.wrap("You have been kicked by an admin.".getBytes());
 				try{
-					kickee.write(b);
+					kickee.write(ByteBuffer.wrap(crypt.encrypt(formatArray(b.array()), kickeeKey.getSecret(), kickeeKey.getIv())));
 					kickee.close();
                     System.out.println("Closed: " + user);
 				}catch(Exception e){
@@ -252,15 +253,16 @@ public class Server{
 
     }
 
-    public void sendList(SocketChannel s){
+    public void sendList(SocketKey s){
         String names = "******** Online ********\n";
         for (String n : allUsers.keySet()){
             names += n + "\n";
         }
 		names += "******** Online ********";
         try{
-            ByteBuffer b = ByteBuffer.wrap(names.getBytes());
-    		s.write(b);
+            ByteBuffer b = ByteBuffer.wrap(crypt.encrypt(formatArray(names.getBytes()), s.getSecret(), s.getIv()));
+
+    		s.getChannel().write(b);
         }
         catch(Exception e){
             System.out.println("Error sending list " + e);
